@@ -76,7 +76,6 @@ const tickets: Array<any> = rawLines.map(line => line.split(',').map(Number));
 // Answer = The sum of all those numbers
 let allValues = tickets.flat();
 let invalidSum = 0;
-let invalidArr = [];
 
 for (let num of allValues) {
   let pass = false;
@@ -88,12 +87,103 @@ for (let num of allValues) {
   }
   if (pass === false) {
     invalidSum += num;
-    invalidArr.push(num);
   }
 }
-invalidArr.length; //?
-console.log(invalidArr);
 // Expect 28873
 invalidSum;
 
 // --------------------- Part 2 -----------------------
+// Eliminate all the invalid tickets from the list.
+// From the remaining tickets, work out which field is which
+// Note: We only need the 6 departure fields for the answer.
+
+for (let ticket of tickets) {
+  for (let num of ticket) {
+    let pass = false;
+    for (let test in tests) {
+      if (tests[test](num) === true) {
+        pass = true;
+        break;
+      }
+    }
+    if (pass === false) {
+      // Mark the ticket as bad
+      ticket.unshift(null);
+      break;
+    }
+  }
+}
+// Remove the marked tickets
+let validTickets = tickets.filter(t => t[0] !== null);
+const numTickets = validTickets.length; //?
+const numFields = validTickets[0].length; //?
+let fieldCounts = {
+  depLoc  : new Array(numFields).fill(0),
+  depPla  : new Array(numFields).fill(0),
+  depStn  : new Array(numFields).fill(0),
+  depTrk  : new Array(numFields).fill(0),
+  depDate : new Array(numFields).fill(0),
+  depTime : new Array(numFields).fill(0)
+};
+
+let fieldMatches = {
+  depLoc  : [],
+  depPla  : [],
+  depStn  : [],
+  depTrk  : [],
+  depDate : [],
+  depTime : []
+}
+
+for (let ticket of validTickets) {
+  for (let i = 0; i < numFields; i++) {
+    fieldCounts["depLoc"][i] += tests["depLoc"](ticket[i]) ? 1 : 0; 
+    fieldCounts["depPla"][i] += tests["depPla"](ticket[i]) ? 1 : 0; 
+    fieldCounts["depStn"][i] += tests["depStn"](ticket[i]) ? 1 : 0; 
+    fieldCounts["depTrk"][i] += tests["depTrk"](ticket[i]) ? 1 : 0; 
+    fieldCounts["depDate"][i] += tests["depDate"](ticket[i]) ? 1 : 0; 
+    fieldCounts["depTime"][i] += tests["depTime"](ticket[i]) ? 1 : 0;
+  }  
+}
+
+for (let field in fieldCounts) {
+  console.log(field);
+  for (let i = 0; i < numFields; i++) {
+    fieldCounts[field]; //?
+    if (fieldCounts[field][i] === numTickets) {
+      fieldMatches[field].push(i);
+    }
+  }
+}
+console.log(fieldMatches);
+
+let colPossible = {};
+
+for (let field in fieldMatches) {
+  for (let i = 0; i < fieldMatches[field].length; i++) {
+    let currentVal = fieldMatches[field][i];
+    if (colPossible[currentVal] === undefined) {
+      colPossible[currentVal] = [field]
+    } else {
+      colPossible[currentVal].push(field);
+    }
+  }
+}
+
+console.log(colPossible);
+// for (let col in colPossible) {
+//   if 
+// }
+
+// The first 5 fields:
+console.log(myTicket[0],myTicket[1], myTicket[5], myTicket[9], myTicket[12])
+let m = myTicket[0] * myTicket[1] * myTicket[5] * myTicket[9] * myTicket[12];
+
+// The 6th field is in here somewhere:
+console.log(myTicket[6], myTicket[7], myTicket[10], myTicket[11], myTicket[16], myTicket[19] );
+console.log(m * myTicket[6], m * myTicket[7], m * myTicket[10], m * myTicket[11], m * myTicket[16], m * myTicket[19] );
+// By trial and error, the hidden mystery field "depLoc" is column 19 (179 on my ticket).
+// That makes the puzzle answer 2587271823407
+// So why did columns 6, 7, 10, 11, and 16 also show up as false possibilities?
+
+// A possible fix: test ALL the fields. We should then be able to sort appropriately and eliminate ambiguities.
