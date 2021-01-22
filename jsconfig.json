@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es2019"
+    "target": "es2019",
+    "lib": [
+      "es6",
+      "dom"
+    ]
   }
 }
